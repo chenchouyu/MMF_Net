@@ -1,0 +1,29 @@
+test:
+  mode: test
+  patch_size: 256
+  path: ./data/test
+  pkl_path: ./model/HRF/CTRBestModel.pkl
+  cuda_device: 0
+  sign: WithoutDistance
+  fourthdimension: true
+train:
+  batch_size: 2
+  cuda_device: 0
+  decay_rate: 0.1
+  epoch: 100
+  isvalidation: true
+  lr: 0.001
+  mode: train
+  num_workers: 0
+  patch_size: 256
+  path: ./data/train
+  pretreatment: false
+  fourthdimension: false
+  beta: 0.1
+  resources:
+    HRF: "/data2/chenchouyu/arteryVeinDatasets/HRF_AV"
+    IOSTAR: "/data2/chenchouyu/arteryVeinDatasets/IOSTAR_AV"
+    Drive: "/home/chenchouyu/seg/Resources/DRIVE_AV"
+    LES: "/home/chenchouyu/seg/Resources/LES_AV"
+  save_model: ./model
+  sign: WtihoutDistance
