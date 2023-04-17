@@ -1,57 +1,35 @@
 # -*- coding: utf-8 -*-
+import logging
+from logging import handlers
+
 import cv2
 import numpy as np
-import torch
 
 
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
-def threshold_vessel(outList, name, mode='av'):
-    if 'Drive' in name[0]:
-        size = (512, 512)
-    elif 'HRF' in name[0]:
-        size = (1536, 1024)
-    else:
-        size = (1024, 1024)
+def threshold_vessel(outList, size):
+    w, h = size
+    s = outList['av'][0].shape[0]
 
-    if mode == 'av':
-        newImg = Image.new('RGB', size)
-    else:
-        newImg = Image.new('L', size)
+    m = w // s + (0 if w % s == 0 else 1)
+    n = h // s + (0 if h % s == 0 else 1)
 
-    s = outList[0].size[0]
-    w, h = newImg.size
-    m, n = math.ceil(w / s), math.ceil(h / s)
+    tmp_w, tmp_h = (m * s - w) // 2, (n * s - h) // 2
 
-    for i, out in enumerate(outList):
-        newImg.paste(out, (int(i / n) * s, int(i % n) * s))
+    predAv = np.zeros((n * s, m * s))
+    predVessel = np.zeros((n * s, m * s))
 
-    return newImg
+    for j in range(m):
+        for i in range(n):
+            predAv[i * s: (i + 1) * s, j * s: (j + 1) * s] = outList['av'][j * n + i]
+            predVessel[i * s: (i + 1) * s, j * s: (j + 1) * s] = outList['ves'][j * n + i]
 
+    predAv, predVessel = predAv[tmp_h: tmp_h + h, tmp_w: tmp_w + w], predVessel[tmp_h: tmp_h + h, tmp_w: tmp_w + w]
 
-def threshold_ves(outList, idx, pos, w, h, patchSize, axis=0.5):
-    c = 1
-    newImg = np.zeros((patchSize, patchSize, c))
-    for i, out in enumerate(outList):
-        x, y = idx[i]
-        tmpImg = np.zeros((patchSize, patchSize, c))
-        tmpImg[y:y + 256, x:x + 256, :] = out
-        newImg += tmpImg
-    for x in range(patchSize):
-        for y in range(patchSize):
-            for z in range(c):
-                num = pos[0][y][x]
-                if num == 0:
-                    continue
-                mid = newImg[y][x][z] / num
-                if mid > axis:
-                    newImg[y][x][z] = 1
-                else:
-                    newImg[y][x][z] = 0
-    newImg = np.round(cv2.resize(newImg, (w, h)))
-    return newImg
+    return predAv, predVessel
 
 
 def rgb_to_bgr(img):
@@ -65,10 +43,43 @@ def restore_av(data):
     g = np.zeros_like(data)
     b = np.zeros_like(data)
 
-    r[data == 3] = 1
-    g[data == 1] = 1
-    b[data == 2] = 1
+    r[data == 3] = 255
+    g[data == 1] = 255
+    b[data == 2] = 255
 
     r, g, b = np.expand_dims(r, 2), np.expand_dims(g, 2), np.expand_dims(b, 2)
 
     return np.concatenate((r, g, b), axis=2)
+
+
+def better_than(a1, a2):
+    sign = 0
+    for k in a1.keys():
+        if a1[k] > a2[k]:
+            sign += 1
+    if sign > len(a1) // 2:
+        return True
+    else:
+        return False
+
+
+# logger
+class Logger(object):
+    level_relations = {
+        'debug': logging.DEBUG,
+        'info': logging.INFO,
+        'warning': logging.WARNING,
+        'error': logging.ERROR,
+        'crit': logging.CRITICAL
+    }
+
+    def __init__(self, filename, level='info', when='D', backCount=3,
+                 fmt='%(asctime)s - %(levelname)s: %(message)s'):
+        self.logger = logging.getLogger(filename)
+        format_str = logging.Formatter(fmt)
+        self.logger.setLevel(self.level_relations.get(level))
+        th = handlers.TimedRotatingFileHandler(filename=filename, when=when, backupCount=backCount,
+                                               encoding='utf-8')
+
+        th.setFormatter(format_str)
+        self.logger.addHandler(th)

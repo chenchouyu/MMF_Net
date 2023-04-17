@@ -1,18 +1,8 @@
 import torch.nn as nn
 import math
-import torch.utils.model_zoo as model_zoo
 import torch
 
 __all__ = ['Res2Net', 'res2net50']
-
-model_urls = {
-    'res2net50_26w_4s': 'https://shanghuagao.oss-cn-beijing.aliyuncs.com/res2net/res2net50_26w_4s-06e79181.pth',
-    'res2net50_48w_2s': 'https://shanghuagao.oss-cn-beijing.aliyuncs.com/res2net/res2net50_48w_2s-afed724a.pth',
-    'res2net50_14w_8s': 'https://shanghuagao.oss-cn-beijing.aliyuncs.com/res2net/res2net50_14w_8s-6527dddc.pth',
-    'res2net50_26w_6s': 'https://shanghuagao.oss-cn-beijing.aliyuncs.com/res2net/res2net50_26w_6s-19041792.pth',
-    'res2net50_26w_8s': 'https://shanghuagao.oss-cn-beijing.aliyuncs.com/res2net/res2net50_26w_8s-2c7c9f12.pth',
-    'res2net101_26w_4s': 'https://shanghuagao.oss-cn-beijing.aliyuncs.com/res2net/res2net101_26w_4s-02a759a1.pth',
-}
 
 
 class Bottle2neck(nn.Module):
@@ -164,78 +154,5 @@ def res2net50(pretrained=False, **kwargs):
     """
     model = Res2Net(Bottle2neck, [3, 4, 6, 3], baseWidth=26, scale=4, **kwargs)
     if pretrained:
-        model.load_state_dict(torch.load('./res2net50_26w_4s-06e79181.pth'))
+        model.load_state_dict(torch.load(r'E:\project\MMF_Net\Net\resnet\model\res2net50_26w_4s-06e79181.pth', map_location=torch.device('cpu')))
     return model
-
-
-def res2net50_26w_4s(pretrained=False, **kwargs):
-    """Constructs a Res2Net-50_26w_4s model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = Res2Net(Bottle2neck, [3, 4, 6, 3], baseWidth=26, scale=4, **kwargs)
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['res2net50_26w_4s']))
-    return model
-
-
-def res2net101_26w_4s(pretrained=False, **kwargs):
-    """Constructs a Res2Net-50_26w_4s model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = Res2Net(Bottle2neck, [3, 4, 23, 3], baseWidth=26, scale=4, **kwargs)
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['res2net101_26w_4s']))
-    return model
-
-
-def res2net50_26w_6s(pretrained=False, **kwargs):
-    """Constructs a Res2Net-50_26w_4s model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = Res2Net(Bottle2neck, [3, 4, 6, 3], baseWidth=26, scale=6, **kwargs)
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['res2net50_26w_6s']))
-    return model
-
-
-def res2net50_26w_8s(pretrained=False, **kwargs):
-    """Constructs a Res2Net-50_26w_4s model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = Res2Net(Bottle2neck, [3, 4, 6, 3], baseWidth=26, scale=8, **kwargs)
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['res2net50_26w_8s']))
-    return model
-
-
-def res2net50_48w_2s(pretrained=False, **kwargs):
-    """Constructs a Res2Net-50_48w_2s model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = Res2Net(Bottle2neck, [3, 4, 6, 3], baseWidth=48, scale=2, **kwargs)
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['res2net50_48w_2s']))
-    return model
-
-
-def res2net50_14w_8s(pretrained=False, **kwargs):
-    """Constructs a Res2Net-50_14w_8s model.
-    Args:
-        pretrained (bool): If True, returns a model pre-trained on ImageNet
-    """
-    model = Res2Net(Bottle2neck, [3, 4, 6, 3], baseWidth=14, scale=8, **kwargs)
-    if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['res2net50_14w_8s']))
-    return model
-
-
-if __name__ == '__main__':
-    images = torch.rand(1, 3, 224, 224).cuda(0)
-    model = res2net50(pretrained=True)
-    model = model.cuda(0)
-    print(model(images).size())

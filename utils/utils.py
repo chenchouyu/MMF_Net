@@ -17,7 +17,7 @@ from skimage import io
 from skimage.util import random_noise
 from skimage import img_as_ubyte
 
-from dataloader import decomposition
+from dataloader import composition
 
 warnings.simplefilter('ignore')
 
@@ -40,14 +40,15 @@ def adjust(item, sign):
 
 def preprocess(config):
     # prepare
+    dataSavePath = os.path.join(config.work_path, 'data')
 
     for item in ['train', 'test', 'validation']:
-        if os.path.exists('./data/' + item):
-            shutil.rmtree('./data/' + item)
+        if os.path.exists(os.path.join(dataSavePath, item)):
+            shutil.rmtree(os.path.join(dataSavePath, item))
 
         _dir = ['image', 'label', 'vessel', 'mask']
         for name in _dir:
-            os.makedirs('./data/' + item + '/' + name, exist_ok=True)
+            os.makedirs(os.path.join(dataSavePath, item, name), exist_ok=True)
 
     resources = config.resources
     if type(config.dataset) != list:
@@ -60,7 +61,7 @@ def preprocess(config):
         with tqdm(total=len(trainImgName) + len(testImgName) + len(valImageName), desc=f'{k}') as bar:
             sigma = 0.05
             patch_size = config.patch_size
-            num = 50
+            num = config.split_number
 
             for name in trainImgName:
                 image = Image.open(os.path.join(resources[k], 'training', 'images', name))
